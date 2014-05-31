@@ -2,20 +2,28 @@ def abrir_archivo(NOMBRE):
     f= open (NOMBRE)
     lista=[]
     for line in f :
-        lista=lista+Diccionario_Datos(line,"","")
+        if line[0:3]=="val":
+            lista+=separa_variable_valor(line,"","",3)
+        elif line[0:3]!="fun":
+            lista+=separa_variable_valor(line,"","",0)
+        else:
+            print"Es funcion"
     f.close()
     return lista
-   
 
-def Diccionario_Datos(linea,Variable,Valor):
-    if linea[0:3]=="val":
-        contador=3
+
+def separa_variable_valor(linea,Variable,Valor,contador):
         while linea[contador]!= "=":
             Variable+=linea[contador]
             contador+=1
         Valor=linea[contador+1:-1]
         return [[Variable,Valor]]
-   
+
+
+
+
+                
+            
         
 
 
