@@ -78,6 +78,25 @@ def verifica2(valor,signo,signo2):
     return abrir==cerrar
 
 
+def convertir_elemento(ListaSeparada):
+    lista=[]
+    for elemento in ListaSeparada:
+        if elemento.isdigit():
+            lista.append(int(elemento))
+        elif elemento[0]=='[':
+            print 'entre'
+            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]))
+            lista.append(x) #funcion de paola
+        elif elemento[0]=='(':
+            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]))
+            lista.append(tuple(x))#funcion de paola
+        elif elemento.lower()== 'true' or elemento.lower()== ' true':
+            lista.append(True)
+        elif elemento.lower()=='false' or elemento.lower()==' false':
+            lista.append(False)
+    return lista
+            
+   
         
         
     
