@@ -95,6 +95,121 @@ def convertir_elemento(ListaSeparada):
         elif elemento.lower()=='false' or elemento.lower()==' false':
             lista.append(False)
     return lista
+#***************************************************************************
+#funcion que evalua las expresiones numericas, los operadores y las variables, las ingresa todas a una lista, invoca a una funcion
+#y devuelve el resultado de la operacion
+def evaluarExpresionesN(expresion, ListaEvaluada):
+    ListaE=[] #almacena la expresion
+    numero='' #variable q guardara el numero
+    variable=''
+    cont=0
+    EsNegativo=False
+    for e in expresion: #recorre el string
+        if e=='~':
+            EsNegativo=True
+        if e.isdigit(): #si la letra es un numero o es negativo el numero
+            numero+=e
+        elif (e=='+') or (e=='-') or (e=='*') or (e=='/') or (e==')') or ((e=='d') and  (expresion[cont:cont+3]=='div')) or ((e=='m') and (expresion[cont:cont+3]=='mod')): #si la letra es un operador
+            if numero.isdigit():
+                if EsNegativo:
+                    EsNegativo=False
+                    numero='~'+numero
+                Numero= convertir_elemento([numero])
+                ListaE.append(Numero[0])
+                numero=''
+            elif variable!='':
+                variable=Cambia_Variables(variable,ListaEvaluada)#funcion pao obtengo el valor de la variable
+                if EsNegativo:
+                    EsNegativo=False
+                    variable=-1*variable
+                ListaE.append(variable)
+                variable=''
+            if e== 'd':
+                ListaE.append('/')
+            elif e=='m':
+                ListaE.append('%')
+            else:
+                ListaE.append(e)
+        elif (e=='('):
+            ListaE.append(e)
+        elif (e!='~') and (e!=' '):   #si la letra es una variable
+            if ((e=='i' and e!='v') and (expresion[cont-1:cont+2]!='div')) or ((e=='o' and e!='d') and (expresion[cont-1:cont+2]!='mod')):
+                variable+=e
+            elif ((e =='v') and ( expresion[cont-2:cont+1]!='div')) or ((e =='d') and ( expresion[cont-2:cont+1]!='mod')):
+                variable+=e
+            elif (e!='i') and (e!='v') and (e!='o') and (e!='d'):
+                variable+=e
+        cont+=1
+    if numero.isdigit():
+        if EsNegativo:
+            EsNegativo=False
+            numero='~'+numero
+        Numero= convertir_elemento([numero])
+        ListaE.append(Numero[0])
+    elif variable!='':
+        variable=Cambia_Variables(variable,ListaEvaluada)#funcion pao obtengo el valor de la variable
+        ListaE.append(variable)
+        variable=''
+    valorExpresion=  OperacionE(ListaE)
+    return valorExpresion
+
+#Le ingresa una lista con la expresion y va desarrollando cada operacion, es recursiva
+def OperacionE(ListaE):
+    if len(ListaE)==1:
+        return ListaE
+    elif len(ListaE)==2:
+        return [ListaE[0]+ListaE[1]]
+    else:
+        contador=0
+        for operador in ListaE:
+            if operador=='('and precedencia(ListaE[contador+1:],operador):
+                c=0
+                for i in ListaE[contador:]:
+                
+                    if i==')':
+                        break
+                    c+=1
+                resultado=OperacionE(ListaE[contador+1:c+contador])
+                ListaE=ListaE[:contador]+resultado+ListaE[contador+c+2:]
+                break
+            elif  (operador=='/' or operador=='*' or operador=='%') and precedencia(ListaE[contador:],operador):
+                resultado=Result_Operacion(ListaE[contador-1:contador+2])
+                ListaE=ListaE[:contador-1]+resultado+ListaE[contador+2:]
+                break
+            elif  (operador=='+' or operador== '-')and precedencia(ListaE[contador:],operador):
+                resultado=Result_Operacion(ListaE[contador-1:contador+2])
+                ListaE=ListaE[:contador-1]+resultado+ListaE[contador+2:]
+                break
+            contador+=1
+        return OperacionE(ListaE)
+
+
+#retorna el resultado de aplicar el operador a los dos numeros                
+def Result_Operacion(Operacion):
+    Result=0 #almacena el resultado
+    if Operacion[1]=='+': #si el operador es suma
+        Result= Operacion[0]+ Operacion[2]
+    elif Operacion[1]=='-': #si el operador es resta
+        Result= Operacion[0]-Operacion[2]
+    elif Operacion[1]=='*': #si el operador es multiplicacion
+        Result= Operacion[0]*Operacion[2]
+    elif Operacion[1]=='/': #si el operador es division
+        Result= Operacion[0]/ Operacion[2]
+    elif Operacion[1]=='%': #si el operador es modulo
+        Result= Operacion[0]% Operacion[2]
+    return [Result]
+
+#verifica si existe un operador de mayor precendia del que hay.
+def precedencia(Lista,operador):
+    for elemento in Lista:
+        if ((elemento=='(')): #si hay una operacion entre parentesis anidada
+            return False
+        elif ((elemento=='(') or (elemento=='/') or (elemento=='*')) and (operador== '+' or operador=='-'): #si el operador es suma o resta y existe otro operador de mayor precedencia
+            return False
+        elif (elemento== '(') and (operador== '*' or operador=='/'): #si el operador es una multiplicacion o division  existe un parentesis despues de la operacion
+            return False
+    return True #si no encontro un operador de precedencia.
+#***********************************************************************
             
    
         
