@@ -95,6 +95,8 @@ def convertir_elemento(ListaSeparada,Scope):
             lista.append(False)
         elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
             lista.append(ExpBooleans(elemento,Scope))
+        elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
+            lista.append(evaluarExpresionesN(elemento, Scope)[0])
         else:
             lista.append(Cambia_Variables(elemento,Scope))
     return lista
