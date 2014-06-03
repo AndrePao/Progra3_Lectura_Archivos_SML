@@ -20,7 +20,7 @@ def separa_variable_valor(linea,Variable,Valor,contador):
         Valor=linea[contador+1:-1]
         return [[Variable,Valor]]
     
-#Lamada por archivo_abrir, cuando termina
+#Llamada por archivo_abrir, cuando termina
 def verifica(lista):
     contador=0
     for i in lista:
@@ -28,26 +28,25 @@ def verifica(lista):
         n=0
         if evaluando[n]==" ":
             n=1
-        if evaluando[n:].isdigit():
-            i[1]=int(evaluando[n:])
-        elif evaluando[n:].lower()=='false':
-            i[1]=False
-        elif evaluando[n:].lower()=='true':
-            i[1]=True
+        if evaluando[n:].find('::')!=-1:
+            i[1]=Concatenar(evaluando[n:],lista[:contador])
         elif evaluando[n]=="[" :
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
-            contenido=convertir_elemento(contenido)
+            contenido=convertir_elemento(contenido,lista[:contador])
             i[1]=contenido
         elif evaluando[n]=="(":
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
-            contenido=convertir_elemento(contenido)
+            contenido=convertir_elemento(contenido,lista[:contador])
             i[1]=tuple(contenido)
+        elif evaluando[n:3]=="if":
+            i[1]=i[1]
         else:
-            i[1]=evaluando
+            contenido=convertir_elemento([evaluando[n:]],lista[:contador])
+            i[1]=contenido[0]
         contador+=1
     return lista
 
-#Lamada por verifica(), cuando esta en proceso.
+#Llamada por verifica(), cuando esta en proceso.
 def separa_contenido_estructuras(string):
     elementos=[]
     valor=""       
@@ -55,9 +54,9 @@ def separa_contenido_estructuras(string):
         if i!=",":
              valor+=i
         else:
-            if valor[0]=="[" and not verifica2(valor,"[","]"):
+            if valor[0]=="[" and not verifica_listas_tuplas(valor,"[","]"):
                 valor+=i
-            elif valor[0]=="(" and not verifica2(valor,"(",")"):
+            elif valor[0]=="(" and not verifica_listas_tuplas(valor,"(",")"):
                 valor+=i
             else:
                 elementos+=[valor]
@@ -66,7 +65,7 @@ def separa_contenido_estructuras(string):
     return elementos
 
 #Verifica que las lista o tuplas estan bien cerradas.
-def verifica2(valor,signo,signo2):
+def verifica_listas_tuplas(valor,signo,signo2):
     abrir=0
     cerrar=0
     for i in valor:
@@ -77,24 +76,29 @@ def verifica2(valor,signo,signo2):
                 cerrar+=1
     return abrir==cerrar
 
-
-def convertir_elemento(ListaSeparada):
+def convertir_elemento(ListaSeparada,Scope):
     lista=[]
     for elemento in ListaSeparada:
         if elemento.isdigit():
             lista.append(int(elemento))
+        elif elemento[0]=='~' and  elemento[1:].isdigit():
+            lista.append(-1*int(elemento[1:]))
         elif elemento[0]=='[':
-            print 'entre'
-            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]))
-            lista.append(x) #funcion de paola
+            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
+            lista.append(x) 
         elif elemento[0]=='(':
-            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]))
-            lista.append(tuple(x))#funcion de paola
-        elif elemento.lower()== 'true' or elemento.lower()== ' true':
+            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
+            lista.append(tuple(x))
+        elif elemento.lower()=='true' or elemento.lower()== ' true':
             lista.append(True)
         elif elemento.lower()=='false' or elemento.lower()==' false':
             lista.append(False)
+        elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
+            lista.append(ExpBooleans(elemento,Scope))
+        else:
+            lista.append(Cambia_Variables(elemento,Scope))
     return lista
+
 #***************************************************************************
 #funcion que evalua las expresiones numericas, los operadores y las variables, las ingresa todas a una lista, invoca a una funcion
 #y devuelve el resultado de la operacion
@@ -210,10 +214,121 @@ def precedencia(Lista,operador):
             return False
     return True #si no encontro un operador de precedencia.
 #***********************************************************************
-            
-   
+
+########Cambia Variables por Valores####################
+def Cambia_Variables(Variable,listaScope): 
+    resultado=Variable
+    for i in listaScope:
+        if i[0]==Variable:
+            resultado=i[1]
+    return resultado
+
+#########Concatena_Listas#################################       
+def Concatenar(expresion,Lista):
+    lista=[]
+    if expresion.find("::")!=-1:
+        n=expresion.find("::")
+        nueva=convertir_elemento([expresion[:n]],Lista)
+        lista+=nueva +Concatenar(expresion[n+2:],Lista)
+    else:
+        nueva=convertir_elemento([expresion],Lista)
+        lista+=nueva[0]
+    return lista
+
+def Concatenaaux(expresion,lista2):
+    lista=Concatenar(expresion,lista2)
+    resultado=[]
+    for e in lista:
+        if isinstance(e,int):
+            resultado+=[e]
+        else:
+            variable=[Cambia_Variables(e,lista2)]
+            resultado+=variable
+    return resultado
+#########################################################
+    
+def ExpBooleans(Exp,lista):
         
-        
+    if Exp.find('andalso')!=-1:
+        Div=Exp.partition(' andalso ')
+        Primer=ExpBooleans(Div[0],lista)
+        if Div[2][0]=='(':
+            se=Div[2][1:-1]
+            Segund=ExpBooleans(se,lista)
+        else:
+            Segund=ExpBooleans(Div[2],lista)
+        nueva=Booleans(Primer,Segund,'andalso',lista)
+    elif Exp.find('orelse')!=-1:
+        Div=Exp.partition(' orelse ')
+        Primer=ExpBooleans(Div[0],lista)
+        Segund=ExpBooleans(Div[2],lista)
+        nueva=Booleans(Primer,Segund,'orelse',lista)
+    elif Exp.find(' <= ')!=-1:
+        n=Exp.find(' <= ')
+        m=n+2
+        signo='<='
+        Primer=convertir_elemento([Exp[:n]],lista)        
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    elif Exp.find('>=')!=-1:
+        n=Exp.find('>=')
+        m=n+2
+        signo='>='
+        Primer=convertir_elemento([Exp[:n]],lista)        
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    elif Exp.find('<')!=-1:
+        n=Exp.find('<')
+        Primer=convertir_elemento([Exp[:n]],lista)        
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    elif Exp.find('>')!=-1:
+        n=Exp.find('>')
+        m=n+1
+        signo='>'
+        Primer=convertir_elemento([Exp[:n]],lista)        
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    elif Exp.find('=')!=-1:
+        n=Exp.find('=')
+        m=n+1
+        signo='='
+        Primer=convertir_elemento([Exp[:n]],lista)        
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    elif Exp.find('<>')!=-1:
+        n=Exp.find('<>')
+        m=n+1
+        signo='<>'
+        Primer=convertir_elemento([Exp[:n]],lista)        
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0][:-1],Segund[0][1:],signo,lista)
+    return nueva       
+
+def Booleans(Primer,Segund,Signo,lista):
+    if not isinstance(Primer,int):
+        Cambia_Variables(Primer,lista)
+    if not isinstance(Segund,int):
+        Cambia_Variables(Segund,lista)
+    if Signo=='<':
+        return Primer < Segund
+    elif Signo=='>':
+        return Primer > Segund
+    elif Signo =='=':
+        return Primer == Segund
+    elif Signo =='<=':
+        return Primer<= Segund
+    elif Signo =='>=':
+        return Primer >= Segund
+    elif Signo =='<>':
+        return Primer!=Segundo
+    elif Signo== 'andalso':
+        return Primer and Segund
+    elif Signo== 'orelse':
+        return Primer or Segund
+    else:
+        return 'Error'
+
     
 
 
