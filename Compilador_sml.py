@@ -1,25 +1,45 @@
+#metodo que abre el archivo de sml
 def abrir_archivo(NOMBRE):
-    f= open (NOMBRE)
-    lista=[]
-    for line in f :
-        if line[0:3]=="val":
-            lista+=separa_variable_valor(line,"","",4)
-        elif line[0:3]!="fun":
-            lista+=separa_variable_valor(line,"","",1)
+    archivo= open (NOMBRE)
+    lista=[] #almacena la informacion en una lista
+    lineas=''
+    for linea in archivo :
+        lineas+=linea
+    Lista_lineas=separarLineas(lineas)#lista en la cual cada elemento es una linea diferente
+    for linea in Lista_lineas:
+        if linea[0:3]=="val": #determina si es una variable
+            lista+=separa_variable_valor(linea,"","",4)
+        elif linea[0:3]!="fun": #determina si es una funcion
+            lista+=separa_variable_valor(linea,"","",1)
         else:
             print"Es funcion"
-    f.close()
-    return verifica(lista)
+        archivo.close() #cierra el archivo
+    return verifica(lista) #invoca a la funcion verifica
 
-#Llamada por archivo_abrir, mientras lo lee
-
-def separa_variable_valor(linea,Variable,Valor,contador): 
+#separa las lineas que se encuentran divididas por un ; o por un \n y elimina los espacios entre las letras
+def separarLineas(LineaArchivo):
+    Lista_Lineas=[] #almacena el archivo
+    linea='' #almacena cada linea
+    for elemento in LineaArchivo: #recorre el string
+        if elemento==';' or elemento=='\n': #verifica cuando existe ; o salto de linea para almacenar la linea en la lista, significa que cambia de declaracion
+            Lista_Lineas.append(linea)
+            linea=''
+        else:
+            if elemento==' ' and linea[0:len(linea)]=='val': #ingresa un espacio si esta entre la el val y el nombre de la variable
+                linea+=elemento
+            elif elemento!= ' ': # no ingresa espacios
+                linea+=elemento
+    if linea!='':
+        Lista_Lineas.append(linea) #agrega el elemento final a la lista
+    return Lista_Lineas
+    
+#funcion que por cada declaracion de variable separa la variable y el valor
+def separa_variable_valor(linea,Variable,Valor,contador):
         while linea[contador]!= "=":
             Variable+=linea[contador]
             contador+=1
-        Valor=linea[contador+1:-1]
+        Valor=linea[contador+1:]#-1]
         return [[Variable,Valor]]
-    
 #Llamada por archivo_abrir, cuando termina
 def verifica(lista):
     contador=0
@@ -150,7 +170,7 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
         if EsNegativo:
             EsNegativo=False
             numero='~'+numero
-        Numero= convertir_elemento([numero])
+        Numero= convertir_elemento([numero],ListaEvaluada)
         ListaE.append(Numero[0])
     elif variable!='':
         variable=Cambia_Variables(variable,ListaEvaluada)#funcion pao obtengo el valor de la variable
