@@ -50,6 +50,8 @@ def verifica(lista):
             n=1
         if evaluando[n:].find('::')!=-1:
             i[1]=Concatenar(evaluando[n:],lista[:contador])
+        elif evaluando[n:].find('<=')!=-1 or evaluando[n:].find('orelse')!=-1 or evaluando[n:].find('andalso')!=-1 or evaluando[n:].find('<=')!=-1 or evaluando[n:].find('<')!=-1 or evaluando[n:].find('>')!=-1 or evaluando[n:].find('=')!=-1 or evaluando[n:].find('<>')!=-1:
+            i[1]=ExpBooleans(evaluando[n:],lista[:contador])
         elif evaluando[n]=="[" :
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
             contenido=convertir_elemento(contenido,lista[:contador])
@@ -103,6 +105,10 @@ def convertir_elemento(ListaSeparada,Scope):
             lista.append(int(elemento))
         elif elemento[0]=='~' and  elemento[1:].isdigit():
             lista.append(-1*int(elemento[1:]))
+        elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
+            lista.append(ExpBooleans(elemento,Scope))
+        elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
+            lista.append(evaluarExpresionesN(elemento, Scope)[0])
         elif elemento[0]=='[':
             x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
             lista.append(x) 
@@ -113,10 +119,6 @@ def convertir_elemento(ListaSeparada,Scope):
             lista.append(True)
         elif elemento.lower()=='false' or elemento.lower()==' false':
             lista.append(False)
-        elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
-            lista.append(ExpBooleans(elemento,Scope))
-        elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
-            lista.append(evaluarExpresionesN(elemento, Scope)[0])
         else:
             lista.append(Cambia_Variables(elemento,Scope))
     return lista
@@ -269,22 +271,55 @@ def Concatenaaux(expresion,lista2):
     return resultado
 #########################################################
     
-def ExpBooleans(Exp,lista):
-        
-    if Exp.find('andalso')!=-1:
-        Div=Exp.partition(' andalso ')
-        Primer=ExpBooleans(Div[0],lista)
-        if Div[2][0]=='(':
-            se=Div[2][1:-1]
-            Segund=ExpBooleans(se,lista)
+def completa_exp_booleans(Exp):
+    Elementos=[]
+    nueva=""
+    contador=0
+    for e in Exp:
+        if e!=")":
+            nueva+=e
         else:
+            nueva+=e
+            if verifica_listas_tuplas(nueva,"(",")"):
+                Elementos+=[nueva[1:-1]]
+                nueva=""
+        contador+=1
+
+    Div=Divide(nueva)
+    Div=Div[1:]
+    Elementos+=Div
+    if Div==[]:
+        print Elementos[0]
+        Elementos=Divide(Elementos[0])
+    return Elementos
+
+def Divide(Exp):
+    Div=[]
+    And=Exp.find("andalso")
+    Or=Exp.find("orelse")
+    if (And < Or and And !=-1)or (And!=-1 and Or==-1):
+        Div=list(Exp.partition("andalso"))
+    elif (Or<And and Or!=-1)or(And==-1 and Or!=-1):
+        Div=list(Exp.partition("orelse"))
+    return Div
+    
+    
+def ExpBooleans(Exp,lista):
+    if Exp.find('andalso')!=-1 or Exp.find('orelse')!=-1:
+        if Exp[0]=="(":
+            Div=completa_exp_booleans(Exp)
+            Primer=ExpBooleans(Div[0],lista)
+            if len(Div)==3:
+                Segund=ExpBooleans(Div[2],lista)
+            else:
+                Segund=ExpBooleans(Div[1],lista)
+            nueva=Booleans(Primer,Segund,Div[1],lista)
+        else:
+            Div=Divide(Exp)
+            Primer=ExpBooleans(Div[0],lista)
             Segund=ExpBooleans(Div[2],lista)
-        nueva=Booleans(Primer,Segund,'andalso',lista)
-    elif Exp.find('orelse')!=-1:
-        Div=Exp.partition(' orelse ')
-        Primer=ExpBooleans(Div[0],lista)
-        Segund=ExpBooleans(Div[2],lista)
-        nueva=Booleans(Primer,Segund,'orelse',lista)
+            nueva=Booleans(Primer,Segund,Div[1],lista)
+        
     elif Exp.find(' <= ')!=-1:
         n=Exp.find(' <= ')
         m=n+2
@@ -301,6 +336,8 @@ def ExpBooleans(Exp,lista):
         nueva=Booleans(Primer[0],Segund[0],signo,lista)
     elif Exp.find('<')!=-1:
         n=Exp.find('<')
+        m=n+1
+        signo='<'
         Primer=convertir_elemento([Exp[:n]],lista)        
         Segund=convertir_elemento([Exp[m:]],lista)
         nueva=Booleans(Primer[0],Segund[0],signo,lista)
@@ -325,7 +362,9 @@ def ExpBooleans(Exp,lista):
         Primer=convertir_elemento([Exp[:n]],lista)        
         Segund=convertir_elemento([Exp[m:]],lista)
         nueva=Booleans(Primer[0][:-1],Segund[0][1:],signo,lista)
-    return nueva       
+
+        
+    return nueva    
 
 def Booleans(Primer,Segund,Signo,lista):
     if not isinstance(Primer,int):
