@@ -240,11 +240,46 @@ def precedencia(Lista,operador):
 #***********************************************************************
 
 ########Cambia Variables por Valores####################
-def Cambia_Variables(Variable,listaScope): 
+
+#funcion que obtiene el elemento de la tupla, EJ w= (1,2)  c=#1w 
+def CambiaValorTupla(resultado,Variable):
+    if len (Variable)==3 or len (Variable)==2:
+        espacio=int(Variable[1])-1
+        return resultado[espacio]
+    else:
+        cont=0
+        
+        for e in  Variable:
+            if e== '(' and precedencia(Variable[cont+1:], '('):
+                
+                cont2=cont
+                for i in Variable[cont:]:
+                    if i== ')':
+                        break
+                    cont2+=1
+                resultado= CambiaValorTupla(resultado,Variable[cont+1:cont2-1] )
+                return CambiaValorTupla(resultado,Variable[:cont])#-1]#+Variable[cont2+1:])
+            cont+=1
+                
+        
+    
+"""SE modificò"""
+#funcion que cambia las variables por el valor real    
+def Cambia_Variables(Variable,listaScope):
     resultado=Variable
-    for i in listaScope:
-        if i[0]==Variable:
-            resultado=i[1]
+    if Variable.find('#')!=-1: #si es un elemento de una tupla
+        for i in Variable:
+            if not Variable.isdigit() and i!='#' and i!= '(' and i!= ')':
+                resultado=Cambia_Variables(i,listaScope)
+                if not isinstance(resultado,tuple):
+                    resultado= Variable
+                else:
+                    resultado=CambiaValorTupla(resultado, Variable)
+                    
+    else:
+        for i in listaScope:
+            if i[0]==Variable:
+                resultado=i[1]
     return resultado
 
 #########Concatena_Listas#################################       
