@@ -142,7 +142,7 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
                 if EsNegativo:
                     EsNegativo=False
                     numero='~'+numero
-                Numero= convertir_elemento([numero])
+                Numero= convertir_elemento([numero], ListaEvaluada)
                 ListaE.append(Numero[0])
                 numero=''
             elif variable!='':
@@ -198,7 +198,7 @@ def OperacionE(ListaE):
                         break
                     c+=1
                 resultado=OperacionE(ListaE[contador+1:c+contador])
-                ListaE=ListaE[:contador]+resultado+ListaE[contador+c+2:]
+                ListaE=ListaE[:contador]+resultado+ListaE[contador+c+1:]
                 break
             elif  (operador=='/' or operador=='*' or operador=='%') and precedencia(ListaE[contador:],operador):
                 resultado=Result_Operacion(ListaE[contador-1:contador+2])
