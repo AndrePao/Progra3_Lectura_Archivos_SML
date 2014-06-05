@@ -3,6 +3,7 @@
 	<head>
         <title>Ambientes SML</title>
         <style type="text/css">
+	body {background-color:black;}
 	{% include "skel-noscript.css" %}
 	{% include "style.css" %}
 	{% include "style-desktop.css" %}
@@ -36,20 +37,13 @@
 		<!-- Nav -->
 		<nav id="nav">
 		<ul>
-		<li><a href="{{url_for('home')}}"><font color="black">Inicio</font></a></li>
-		<li><a href="{{url_for('Principal')}}"><font color="black">principal</font></a></li>
+		<li><a href="{{url_for('home')}}"><font color="white">Inicio</font></a></li>
+		<li><a href="{{url_for('Principal')}}"><font color="white">Subir Archivo</font></a></li>
 			
 		</ul>
 		</nav>
 		<!-- /Nav -->
 		
-			<!-- Subir -->
-		<h3> <center>Subir nuevo archivo </center><h3>  
-   		<center> <form action="" method=post enctype=multipart/form-data> 
-      		<p> <input type = nombre de archivo = Archivo > 
-      		   <input type=submit value=Upload> 
-    		</ form> </center>
-		<!-- /Subir -->	
 </div>
 		<!-- /Header -->
 		</div>
@@ -57,8 +51,7 @@
 		</div>
 		</div>
 		<!-- /Header Wrapper -->
-		
-		
+			
 		<div id="intro-wrapper" class="wrapper wrapper-style1">
 	
 			{% block content %}{% endblock %}
