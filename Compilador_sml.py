@@ -16,6 +16,74 @@ def abrir_archivo(NOMBRE):
         archivo.close() #cierra el archivo
     return verifica(lista) #invoca a la funcion verifica
 
+
+#Funcion para agregar el tipo de dato a la lista de alcance
+def tipo_dato(lista):
+    for e in lista:
+        if type(e[1])==int:		#Si es un int Agrega 'int'
+            e+=['int']
+        elif type(e[1])== bool:		#Si es un bool agregar 'bool'
+            e+= ['boolean']
+        elif type(e[1])== list:		#Si es de tipo lista llama a la funcion evalua tipo lista
+            tipo_lista= Evalua_Tipo_Lista(e[1]) 
+            e+=[tipo_lista]
+        elif type(e[1])==tuple:		#Si es de tipo lista llama a la funcion evalua tipo tupla
+            tipo_tupla= Evalua_Tipo_Tupla(e[1])
+            e+=[tipo_tupla]
+        else:
+            e+=['string']
+    return lista    
+
+#Evalua el tipo de una tupla
+def Evalua_Tipo_Tupla(tupla):
+    Tipo=''
+    for i in tupla:
+        if type(i)==tuple:		#si la tupla contiene otra tupla, llama otra vez a la funcion de evalua tipo tupla
+            res=Evalua_Tipo_Tupla(i)
+            Tipo+='*'+res		#Agrega
+            
+        elif type(i)==int:		#Si es de tipo int y Tipo esta vacio agrega int sino agrega *int
+            if Tipo=='':
+                Tipo+='int'
+            else:
+                Tipo+='*int'
+
+        elif type(i)==bool:		#Si es de tipo bool y Tipo esta vacio agrega bool sino agrega *bool
+            if Tipo=='':
+                Tipo+='bool'
+            else:
+                Tipo+='*bool'
+            
+        elif type(i)==list:		#Si es de tipo lista llama a la funcion evalua tipo lista con la lista 
+            res=Evalua_Tipo_Lista(i)
+            if Tipo=='':
+                Tipo+=+res		#Agrega resultado
+            else:
+                Tipo+='*'+res
+        
+            
+    return '('+Tipo+')'
+
+# Funcion que evalua el tipo de dato de una lista
+def Evalua_Tipo_Lista(Lista):
+    Tipo=''
+    if type(Lista[0])== int:    #si el primer elemento es de tipo int, es int list
+        Tipo+= 'int list'
+        
+    elif type(Lista[0])== bool:   #si el primer elemento es de tipo bool, es bool list
+        Tipo+= 'bool list'
+        
+    elif type(Lista[0])== tuple:	#si el primer elemento es de tipo tupla, se llama a la funcion evalua tipo tupla y se le agrega el list
+        tipo_tupla= Evalua_Tipo_Tupla(Lista[0])
+        Tipo+= tipo_tupla+' list'
+        
+    elif type(Lista[0])== list:		#si el primer elemento es de tipo list llama de nuevo a evalua tipo lista
+        tipo=Evalua_Tipo_Lista(Lista[0])
+        Tipo+= tipo+' list'
+            
+    return Tipo
+        
+
 #separa las lineas que se encuentran divididas por un ; o por un \n y elimina los espacios entre las letras
 def separarLineas(LineaArchivo):
     Lista_Lineas=[] #almacena el archivo
