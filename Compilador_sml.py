@@ -14,7 +14,8 @@ def abrir_archivo(NOMBRE):
         else:
             print"Es funcion"
         archivo.close() #cierra el archivo
-    return verifica(lista) #invoca a la funcion verifica
+    lista=verifica(lista)
+    return tipo_dato(lista) #invoca a la funcion verifica
 
 
 #Funcion para agregar el tipo de dato a la lista de alcance
@@ -353,7 +354,7 @@ def CambiaValorTupla(resultado,Variable):
                 
         
     
-"""SE modificò"""
+"""SE modifico"""
 #funcion que cambia las variables por el valor real    
 def Cambia_Variables(Variable,listaScope):
     resultado=Variable
@@ -371,8 +372,13 @@ def Cambia_Variables(Variable,listaScope):
             if i[0]==Variable:
                 resultado=i[1]
     return resultado
-#########Concatena_Listas#################################       
-'''****************************************************'''
+##############################################################################
+##################Evaluar Expresiones con Listas##############################      
+'''************************************************************************'''
+'''En caso de encontar un parentesis completa la expresion, hace uso de la
+funcion verifica_listas_tuplas para verificar que la expresion se encuentre
+completa, esto ya que el se pueden evaluar precedencias de operaciones'''
+'''************************************************************************'''
 def completa_exp_Listas(Exp):
     Elementos=[]
     nueva=""
@@ -389,7 +395,11 @@ def completa_exp_Listas(Exp):
     Div=nueva.partition('::')
     Elementos+=Div[1:]
     return Elementos
-'''*****************************************************'''
+"""'''***********************************************************************'''
+'''Evalua las expresiones con lista y encuentra la operacion que se desea
+realizar, las cuales pueden ser segun sml: '::','hd' y 'tl y
+realiza las operaciones equivalentes en python''''
+'''************************************************************************'''"""
 def Exp_Listas(expresion,Lista):
     lista=[]
 
@@ -418,7 +428,10 @@ def Exp_Listas(expresion,Lista):
     if len(lista)==1 and isinstance(lista[0],list):
         lista=lista[0]
     return lista
-"""******************************************************"""
+"""*************************************************************************"""
+""" su objetivo es cambiar variables en caso de que sea necesario"""
+"""*************************************************************************"""
+
 def Concatenaaux(expresion,lista2):
     lista=Exp_Listas(expresion,lista2)
     resultado=[]
@@ -437,12 +450,13 @@ def Concatenaaux(expresion,lista2):
         resultado=[]
         resultado=[resul[0]]+resul[1]
     return resultado
-#########################################################
-
-
-
-##################Evaluar EXxresiones Booleanas#############################
-    
+##############################################################################
+##################Evaluar Expresiones Booleanas###############################
+'''***********************************************************************'''
+'''Evalua Expresiones Booleanas, busca en las expresiones al operador logico,
+si lo encuentra resuelve la operacion, la lista de entrada
+sirve para el cambio y el alcance de las variables.'''
+'''************************************************************************'''    
 def completa_exp_booleans(Exp):
     Elementos=[]
     nueva=""
@@ -466,7 +480,12 @@ def completa_exp_booleans(Exp):
         Div=Div[1:]
     Elementos+=Div
     return Elementos
-"""********************************************************"""
+"""***********************************************************************"""
+'''Busca el primer operador en caso de que en una expresion compleja
+se encuentren ambos(andalso,orelse), devuelve una lista de tres elementos,
+la exresion antes del operador a evaluar, el operador a evaluar y por ultimo
+la expresion siguiente a evaluar'''
+"""***********************************************************************"""
 def Divide(Exp):
     Div=[]
     And=Exp.find("andalso")
@@ -476,7 +495,14 @@ def Divide(Exp):
     elif (Or<And and Or!=-1)or(And==-1 and Or!=-1):
         Div=list(Exp.partition("orelse"))
     return Div
-'''********************************************************'''    
+
+'''************************************************************************'''
+'''Devuelve el resultado de la expresion booleana,
+separa el elemento del lado izquierdo de lo expresion booleana (Primer)y el
+del lado derecho(Segund), busca el signo de la operacion a aplicar y la lista
+con el alcance y valor de las variables.
+Invoca a la funcion Booleans para obtener el resultado y lo retorna'''
+"""***********************************************************************"""
 def ExpBooleans(Exp,lista):
     if Exp.find('andalso')!=-1 or Exp.find('orelse')!=-1:
         if Exp[0]=="(":
@@ -492,51 +518,58 @@ def ExpBooleans(Exp,lista):
             Primer=ExpBooleans(Div[0],lista)
             Segund=ExpBooleans(Div[2],lista)
         nueva=Booleans(Primer,Segund,Div[1],lista)
-    elif Exp.find(' <= ')!=-1:
-        n=Exp.find(' <= ')
-        m=n+2
-        signo='<='
-        Primer=convertir_elemento([Exp[:n]],lista)        
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0],Segund[0],signo,lista)
-    elif Exp.find('>=')!=-1:
-        n=Exp.find('>=')
-        m=n+2
-        signo='>='
-        Primer=convertir_elemento([Exp[:n]],lista)      
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0],Segund[0],signo,lista)
-    elif Exp.find('<>')!=-1:
-        n=Exp.find('<>')
-        m=n+2
-        signo='<>'
-        Primer=convertir_elemento([Exp[:n]],lista)        
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0],Segund[0],signo,lista)
-    elif Exp.find('<')!=-1:
-        n=Exp.find('<')
-        m=n+1
-        signo='<'
-        Primer=convertir_elemento([Exp[:n]],lista)        
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0],Segund[0],signo,lista)
-    elif Exp.find('>')!=-1:
-        n=Exp.find('>')
-        m=n+1
-        signo='>'
-        Primer=convertir_elemento([Exp[:n]],lista)        
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0],Segund[0],signo,lista)
-    elif Exp.find('=')!=-1:
-        n=Exp.find('=')
-        m=n+1
-        signo='='
-        Primer=convertir_elemento([Exp[:n]],lista)        
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    else:
+        if Exp[0]=='(' and Exp[-1]==')':
+            Exp=Exp[1:-1]
+        if Exp.find(' <= ')!=-1:
+            n=Exp.find(' <= ')
+            m=n+2
+            signo='<='
+            Primer=convertir_elemento([Exp[:n]],lista)        
+            Segund=convertir_elemento([Exp[m:]],lista)
+            nueva=Booleans(Primer[0],Segund[0],signo,lista)
+        elif Exp.find('>=')!=-1:
+            n=Exp.find('>=')
+            m=n+2
+            signo='>='
+            Primer=convertir_elemento([Exp[:n]],lista)      
+            Segund=convertir_elemento([Exp[m:]],lista)
+            nueva=Booleans(Primer[0],Segund[0],signo,lista)
+        elif Exp.find('<>')!=-1:
+            n=Exp.find('<>')
+            m=n+2
+            signo='<>'
+            Primer=convertir_elemento([Exp[:n]],lista)        
+            Segund=convertir_elemento([Exp[m:]],lista)
+            nueva=Booleans(Primer[0],Segund[0],signo,lista)
+        elif Exp.find('<')!=-1:
+            n=Exp.find('<')
+            m=n+1
+            signo='<'
+            Primer=convertir_elemento([Exp[:n]],lista)        
+            Segund=convertir_elemento([Exp[m:]],lista)
+            nueva=Booleans(Primer[0],Segund[0],signo,lista)
+        elif Exp.find('>')!=-1:
+            n=Exp.find('>')
+            m=n+1
+            signo='>'
+            Primer=convertir_elemento([Exp[:n]],lista)        
+            Segund=convertir_elemento([Exp[m:]],lista)
+            nueva=Booleans(Primer[0],Segund[0],signo,lista)
+        elif Exp.find('=')!=-1:
+            n=Exp.find('=')
+            m=n+1
+            signo='='
+            Primer=convertir_elemento([Exp[:n]],lista)        
+            Segund=convertir_elemento([Exp[m:]],lista)
+            nueva=Booleans(Primer[0],Segund[0],signo,lista)
 
     return nueva  
-"""**************************************************************"""
+"""************************************************************************"""
+'''************************************************************************'''
+'''Busca el signo equivalente de los operadores logucis de sml en python y
+retorna el resultado, resive los parametros encontrados en la funcion anterior'''
+"""***********************************************************************"""
 def Booleans(Primer,Segund,Signo,lista):
     if not isinstance(Primer,int):
         Cambia_Variables(Primer,lista)
@@ -562,8 +595,13 @@ def Booleans(Primer,Segund,Signo,lista):
         return Primer or Segund
     else:
         return 'Error'
-###############Expresiones Condicionales###############################
-"""**************************************************************"""
+##############################################################################
+###############Expresiones Condicionales######################################
+"""************************************************************************"""
+'''Evalua Expresiones Condicionales, busca en las expresiones operadores como
+if,then,elseif,else si lo encuentra resuelve la operacion en forma de descarte, la lista de entrada
+sirve para el cambio y el alcance de las variables.'''
+"""************************************************************************"""
 def Exp_If(Exp,Lista):
     if Exp[:2]=='if':
         Div=Exp[2:].partition('then')
@@ -590,8 +628,12 @@ def Exp_If(Exp,Lista):
                 if realiza[2][:3]=='(if':
                     resultado=realiza[2][1:-1]
                 return convertir_elemento([resultado],Lista)[0]
-"""**************************************************************"""    
-    
+"""**************************************************************************"""    
+"""************************************************************************"""
+'''Si en la operacion booleana no se cumple el if entonces se invoca a esta funcion
+su objetivo es encontrar la siguiente expresion booleana sea elseif o else,
+devuelve una lista'''
+"""************************************************************************"""    
 def DivExpIF(Exp):
     if Exp[:3]=='(if':
         RESUL=[]
@@ -622,7 +664,11 @@ def DivExpIF(Exp):
             return ['no','se','pudo']
 
         return DIV
-"""**************************************************************"""     
+"""*************************************************************************"""
+""""Si se encuentra un paraentesis en las expresiones booleanas se invoca
+esta funcion para encontrar la operacion completa que se encuentra en el,
+invoca a la funcion verifica_listas_tuplas para verificar los parentesis"""
+"""*************************************************************************"""
 def completa_exp_Listas2(Exp):
     Elementos=[]
     nueva=""
@@ -637,7 +683,8 @@ def completa_exp_Listas2(Exp):
                 nueva=""
         contador+=1
     return Elementos
-
+"""*************************************************************************"""
+###############################################################################
 
 
 
