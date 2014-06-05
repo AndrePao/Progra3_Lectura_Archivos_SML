@@ -22,7 +22,7 @@ def separarLineas(LineaArchivo):
     linea='' #almacena cada linea
     for elemento in LineaArchivo: #recorre el string
         if elemento==';' or elemento=='\n': #verifica cuando existe ; o salto de linea para almacenar la linea en la lista, significa que cambia de declaracion
-            if linea!="":
+            if linea!="": # Verifica que la linea no sea vacia
                 if Lista_Lineas==[]:
                     Lista_Lineas.append(linea)
                     linea=''
@@ -50,34 +50,43 @@ def separa_variable_valor(linea,Variable,Valor,contador):
         Valor=linea[contador+1:]
         return [[Variable,Valor]]
 #Llamada por archivo_abrir, cuando termina
+'''Recorre la lista donde estan separadas las variables y los valores,
+ademas realiza los converciones de los valores'''
 def verifica(lista):
-    contador=0
+    contador=0 #Se especifica el contador para conocer el alcance de las variables
     for i in lista:
         evaluando=i[1]
         n=0
         if evaluando[n]==" ":
             n=1
-        if evaluando[n:].find('::')!=-1:
+        if evaluando[n:].find('::')!=-1: #la funcion .find sirve para conocer si una expresion se encuentra en el string
+            # En caso de encontrar la expresion :: concatena las listas
             i[1]=Concatenaaux(evaluando[n:],lista[:contador])
         elif evaluando[n:n+2]=='if':
+            # En caso de encontrar la expresion if convierte las expresiones condicionales
             i[1]=Exp_If(evaluando[n:],lista[:contador])
         elif evaluando[n:].find('<=')!=-1 or evaluando[n:].find('orelse')!=-1 or evaluando[n:].find('andalso')!=-1 or evaluando[n:].find('<=')!=-1 or evaluando[n:].find('<')!=-1 or evaluando[n:].find('>')!=-1 or evaluando[n:].find('=')!=-1 or evaluando[n:].find('<>')!=-1:
+            # convierte las expresiones booleans
             i[1]=ExpBooleans(evaluando[n:],lista[:contador])
         elif evaluando[n]=="[" :
+            #Convierte el contenido de la lista
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
             contenido=convertir_elemento(contenido,lista[:contador])
             i[1]=contenido
         elif evaluando[n]=="(":
+            #Convierte el contenido de las tuplas
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
             contenido=convertir_elemento(contenido,lista[:contador])
             i[1]=tuple(contenido)
         else:
+            #Cambia variables por sus respectivos valores y conviente los numeros
             contenido=convertir_elemento([evaluando[n:]],lista[:contador])
             i[1]=contenido[0]
         contador+=1
     return lista
 
 #Llamada por verifica(), cuando esta en proceso.
+# Separa los elementos que se encuentran en una lista o tupla
 def separa_contenido_estructuras(string):
     elementos=[]
     valor=""       
@@ -115,8 +124,6 @@ def convertir_elemento(ListaSeparada,Scope):
         elif elemento[0]=='~' and  elemento[1:].isdigit():
             lista.append(-1*int(elemento[1:]))
         elif elemento[:2]=='if':
-            print 'en if  elemento'
-            print elemento
             lista.append(Exp_If(elemento,Scope))
         elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
             lista.append(ExpBooleans(elemento,Scope))
@@ -297,6 +304,7 @@ def Cambia_Variables(Variable,listaScope):
                 resultado=i[1]
     return resultado
 #########Concatena_Listas#################################       
+'''****************************************************'''
 def completa_exp_Listas(Exp):
     Elementos=[]
     nueva=""
@@ -313,7 +321,7 @@ def completa_exp_Listas(Exp):
     Div=nueva.partition('::')
     Elementos+=Div[1:]
     return Elementos
-
+'''*****************************************************'''
 def Exp_Listas(expresion,Lista):
     lista=[]
 
