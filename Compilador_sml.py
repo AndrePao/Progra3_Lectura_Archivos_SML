@@ -22,8 +22,17 @@ def separarLineas(LineaArchivo):
     linea='' #almacena cada linea
     for elemento in LineaArchivo: #recorre el string
         if elemento==';' or elemento=='\n': #verifica cuando existe ; o salto de linea para almacenar la linea en la lista, significa que cambia de declaracion
-            Lista_Lineas.append(linea)
-            linea=''
+            if linea!="":
+                if Lista_Lineas==[]:
+                    Lista_Lineas.append(linea)
+                    linea=''
+                else:
+                    n=Lista_Lineas[-1].find('let')
+                    if linea[:3]!='val' or (linea[:3]=='val' and Lista_Lineas[-1][n:]=='let'):
+                            Lista_Lineas[-1]+=linea
+                    else:
+                        Lista_Lineas.append(linea)
+                    linea=''
         else:
             if elemento==' ' and linea[0:len(linea)]=='val': #ingresa un espacio si esta entre la el val y el nombre de la variable
                 linea+=elemento
@@ -38,7 +47,7 @@ def separa_variable_valor(linea,Variable,Valor,contador):
         while linea[contador]!= "=":
             Variable+=linea[contador]
             contador+=1
-        Valor=linea[contador+1:]#-1]
+        Valor=linea[contador+1:]
         return [[Variable,Valor]]
 #Llamada por archivo_abrir, cuando termina
 def verifica(lista):
@@ -49,7 +58,9 @@ def verifica(lista):
         if evaluando[n]==" ":
             n=1
         if evaluando[n:].find('::')!=-1:
-            i[1]=Concatenar(evaluando[n:],lista[:contador])
+            i[1]=Concatenaaux(evaluando[n:],lista[:contador])
+        elif evaluando[n:n+2]=='if':
+            i[1]=Exp_If(evaluando[n:],lista[:contador])
         elif evaluando[n:].find('<=')!=-1 or evaluando[n:].find('orelse')!=-1 or evaluando[n:].find('andalso')!=-1 or evaluando[n:].find('<=')!=-1 or evaluando[n:].find('<')!=-1 or evaluando[n:].find('>')!=-1 or evaluando[n:].find('=')!=-1 or evaluando[n:].find('<>')!=-1:
             i[1]=ExpBooleans(evaluando[n:],lista[:contador])
         elif evaluando[n]=="[" :
@@ -60,8 +71,6 @@ def verifica(lista):
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
             contenido=convertir_elemento(contenido,lista[:contador])
             i[1]=tuple(contenido)
-        elif evaluando[n:3]=="if":
-            i[1]=i[1]
         else:
             contenido=convertir_elemento([evaluando[n:]],lista[:contador])
             i[1]=contenido[0]
@@ -105,10 +114,16 @@ def convertir_elemento(ListaSeparada,Scope):
             lista.append(int(elemento))
         elif elemento[0]=='~' and  elemento[1:].isdigit():
             lista.append(-1*int(elemento[1:]))
+        elif elemento[:2]=='if':
+            print 'en if  elemento'
+            print elemento
+            lista.append(Exp_If(elemento,Scope))
         elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
             lista.append(ExpBooleans(elemento,Scope))
         elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
             lista.append(evaluarExpresionesN(elemento, Scope)[0])
+        elif elemento.find('hd')!=-1 or elemento.find('tl')!=-1 or elemento.find('::')!=-1:
+            lista.append(Concatenaaux(elemento,Scope))
         elif elemento[0]=='[':
             x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
             lista.append(x) 
@@ -239,7 +254,7 @@ def precedencia(Lista,operador):
     return True #si no encontro un operador de precedencia.
 #***********************************************************************
 
-########Cambia Variables por Valores####################
+
 
 #funcion que obtiene el elemento de la tupla, EJ w= (1,2)  c=#1w 
 def CambiaValorTupla(resultado,Variable):
@@ -281,30 +296,76 @@ def Cambia_Variables(Variable,listaScope):
             if i[0]==Variable:
                 resultado=i[1]
     return resultado
-
 #########Concatena_Listas#################################       
-def Concatenar(expresion,Lista):
-    lista=[]
-    if expresion.find("::")!=-1:
-        n=expresion.find("::")
-        nueva=convertir_elemento([expresion[:n]],Lista)
-        lista+=nueva +Concatenar(expresion[n+2:],Lista)
-    else:
-        nueva=convertir_elemento([expresion],Lista)
-        lista+=nueva[0]
-    return lista
+def completa_exp_Listas(Exp):
+    Elementos=[]
+    nueva=""
+    contador=0
+    for e in Exp:
+        if e!=")":
+            nueva+=e
+        else:
+            nueva+=e
+            if verifica_listas_tuplas(nueva,"(",")"):
+                Elementos+=[nueva[1:-1]]
+                nueva=""
+        contador+=1
+    Div=nueva.partition('::')
+    Elementos+=Div[1:]
+    return Elementos
 
+def Exp_Listas(expresion,Lista):
+    lista=[]
+
+    if expresion.find("::")!=-1:
+        if expresion[0]=='(':
+            Div=completa_exp_Listas(expresion)
+        else:
+            Div=expresion.partition('::')
+        Cabeza=convertir_elemento([Div[0]],Lista)
+        Cuerpo=convertir_elemento([Div[2]],Lista)
+        lista+=Cabeza+Cuerpo
+    elif expresion.find('hd')!=-1:
+        Div=expresion.partition('hd')
+        Div=Div[1:]
+        Cabeza=convertir_elemento([Div[1]],Lista)[0][0]
+        lista=[Cabeza]
+    elif expresion.find('tl')!=-1:
+        Div=expresion.partition('tl')
+        Div=Div[1:]
+        Cuerpo=convertir_elemento([Div[1]],Lista)[0]
+        lista+=[Cuerpo[1:]]
+    if len(lista)==2 and isinstance(lista[1],list):
+        lis=lista
+        lista=[]
+        lista=[lis[0]]+lis[1]
+    if len(lista)==1 and isinstance(lista[0],list):
+        lista=lista[0]
+    return lista
+"""******************************************************"""
 def Concatenaaux(expresion,lista2):
-    lista=Concatenar(expresion,lista2)
+    lista=Exp_Listas(expresion,lista2)
     resultado=[]
+    if isinstance(lista,int):
+        lista=[lista]
     for e in lista:
         if isinstance(e,int):
             resultado+=[e]
         else:
             variable=[Cambia_Variables(e,lista2)]
             resultado+=variable
+    if len(resultado)==1:
+        resultado=resultado[0]
+    elif len(resultado)==2 and isinstance(resultado[1],list):
+        resul=resultado
+        resultado=[]
+        resultado=[resul[0]]+resul[1]
     return resultado
 #########################################################
+
+
+
+##################Evaluar EXxresiones Booleanas#############################
     
 def completa_exp_booleans(Exp):
     Elementos=[]
@@ -319,15 +380,17 @@ def completa_exp_booleans(Exp):
                 Elementos+=[nueva[1:-1]]
                 nueva=""
         contador+=1
-
     Div=Divide(nueva)
-    Div=Div[1:]
-    Elementos+=Div
     if Div==[]:
-        print Elementos[0]
         Elementos=Divide(Elementos[0])
+    if Div[0]=="":
+        Div=Div[1:]   
+    else:
+        Elementos[0]='('+Elementos[0]+')'+Div[0]
+        Div=Div[1:]
+    Elementos+=Div
     return Elementos
-
+"""********************************************************"""
 def Divide(Exp):
     Div=[]
     And=Exp.find("andalso")
@@ -337,8 +400,7 @@ def Divide(Exp):
     elif (Or<And and Or!=-1)or(And==-1 and Or!=-1):
         Div=list(Exp.partition("orelse"))
     return Div
-    
-    
+'''********************************************************'''    
 def ExpBooleans(Exp,lista):
     if Exp.find('andalso')!=-1 or Exp.find('orelse')!=-1:
         if Exp[0]=="(":
@@ -353,8 +415,7 @@ def ExpBooleans(Exp,lista):
             Div=Divide(Exp)
             Primer=ExpBooleans(Div[0],lista)
             Segund=ExpBooleans(Div[2],lista)
-            nueva=Booleans(Primer,Segund,Div[1],lista)
-        
+        nueva=Booleans(Primer,Segund,Div[1],lista)
     elif Exp.find(' <= ')!=-1:
         n=Exp.find(' <= ')
         m=n+2
@@ -366,6 +427,13 @@ def ExpBooleans(Exp,lista):
         n=Exp.find('>=')
         m=n+2
         signo='>='
+        Primer=convertir_elemento([Exp[:n]],lista)      
+        Segund=convertir_elemento([Exp[m:]],lista)
+        nueva=Booleans(Primer[0],Segund[0],signo,lista)
+    elif Exp.find('<>')!=-1:
+        n=Exp.find('<>')
+        m=n+2
+        signo='<>'
         Primer=convertir_elemento([Exp[:n]],lista)        
         Segund=convertir_elemento([Exp[m:]],lista)
         nueva=Booleans(Primer[0],Segund[0],signo,lista)
@@ -390,22 +458,16 @@ def ExpBooleans(Exp,lista):
         Primer=convertir_elemento([Exp[:n]],lista)        
         Segund=convertir_elemento([Exp[m:]],lista)
         nueva=Booleans(Primer[0],Segund[0],signo,lista)
-    elif Exp.find('<>')!=-1:
-        n=Exp.find('<>')
-        m=n+1
-        signo='<>'
-        Primer=convertir_elemento([Exp[:n]],lista)        
-        Segund=convertir_elemento([Exp[m:]],lista)
-        nueva=Booleans(Primer[0][:-1],Segund[0][1:],signo,lista)
 
-        
-    return nueva    
-
+    return nueva  
+"""**************************************************************"""
 def Booleans(Primer,Segund,Signo,lista):
     if not isinstance(Primer,int):
         Cambia_Variables(Primer,lista)
     if not isinstance(Segund,int):
         Cambia_Variables(Segund,lista)
+    if Segund=="":
+        return Primer
     if Signo=='<':
         return Primer < Segund
     elif Signo=='>':
@@ -417,16 +479,88 @@ def Booleans(Primer,Segund,Signo,lista):
     elif Signo =='>=':
         return Primer >= Segund
     elif Signo =='<>':
-        return Primer!=Segundo
+        return Primer!=Segund
     elif Signo== 'andalso':
         return Primer and Segund
     elif Signo== 'orelse':
         return Primer or Segund
     else:
         return 'Error'
-
+###############Expresiones Condicionales###############################
+"""**************************************************************"""
+def Exp_If(Exp,Lista):
+    if Exp[:2]=='if':
+        Div=Exp[2:].partition('then')
+        realiza=convertir_elemento([Div[0]],Lista)
+        if realiza[0]==True:
+            resultado=DivExpIF(Div[2])
+            return convertir_elemento([resultado[0]],Lista)[0]
+        else:
+            return Exp_If(Div[2],Lista)         
+    else:
+        realiza=DivExpIF(Exp)
+        if realiza[1]=="elseif":
+                realiza=realiza[2].partition('then')
+                realiza2=convertir_elemento([realiza[0]],Lista)
+                if realiza2[0]==True:
+                    resultado=DivExpIF(realiza[2])
+                    return convertir_elemento([resultado[0]],Lista)[0]
+                else:
+                    
+                    return Exp_If(realiza[2],Lista)
+        else:
+            if realiza[1]=="else":
+                resultado=realiza[2]
+                if realiza[2][:3]=='(if':
+                    resultado=realiza[2][1:-1]
+                return convertir_elemento([resultado],Lista)[0]
+"""**************************************************************"""    
     
+def DivExpIF(Exp):
+    if Exp[:3]=='(if':
+        RESUL=[]
+        nueva=completa_exp_Listas2(Exp)[0]
+        RESUL+=[nueva]
+        nova=Exp.partition(nueva)
+        ELSEIF=nova[2].find('elseif')
+        ELSE=nova[2].find('else')
+        DIV=[]
+        if (ELSEIF < ELSE and ELSEIF !=-1)or (ELSEIF!=-1 and ELSE==-1) or (ELSEIF==ELSE and (ELSEIF!=-1 and ELSE!=-1)):
+            DIV=nova[2].partition('elseif')
+        elif (ELSE < ELSEIF and ELSE !=-1)or (ELSE!=-1 and ELSEIF==-1):
+            DIV=nova[2].partition('else')
+        else:
+            return ['no','se','pudo']
+        RESUL+=DIV[1:]
+        RESUL[0]=RESUL[0][1:-1]
+        return RESUL
+    else:
+        ELSEIF=Exp.find('elseif')
+        ELSE=Exp.find('else')
+        DIV=[]
+        if (ELSEIF < ELSE and ELSEIF !=-1)or (ELSEIF!=-1 and ELSE==-1) or (ELSEIF==ELSE and (ELSEIF!=-1 and ELSE!=-1)):
+            DIV=Exp.partition('elseif')
+        elif (ELSE < ELSEIF and ELSE !=-1)or (ELSE!=-1 and ELSEIF==-1):
+            DIV=Exp.partition('else')
+        else:
+            return ['no','se','pudo']
 
+        return DIV
+"""**************************************************************"""     
+def completa_exp_Listas2(Exp):
+    Elementos=[]
+    nueva=""
+    contador=0
+    for e in Exp:
+        if e!=")":
+            nueva+=e
+        else:
+            nueva+=e
+            if verifica_listas_tuplas(nueva,"(",")"):
+                Elementos+=[nueva]
+                nueva=""
+        contador+=1
+    return Elementos
 
 
 
