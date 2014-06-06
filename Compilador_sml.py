@@ -222,13 +222,23 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
     numero='' #variable q guardara el numero
     variable=''
     cont=0
+    c=0
     EsNegativo=False
-    for e in expresion: #recorre el string
-        if e=='~':
+    largo=len(expresion)
+    while cont!=largo:
+        if expresion[cont]=='~':
             EsNegativo=True
-        if e.isdigit(): #si la letra es un numero o es negativo el numero
-            numero+=e
-        elif (e=='+') or (e=='-') or (e=='*') or (e=='/') or (e==')') or ((e=='d') and  (expresion[cont:cont+3]=='div')) or ((e=='m') and (expresion[cont:cont+3]=='mod')): #si la letra es un operador
+        if expresion[cont].isdigit(): #si la letra es un numero o es negativo el numero
+            numero+=expresion[cont]
+        elif expresion[cont]=='#':  #cambieeeee
+            c=cont
+            expresionTupla=''
+            while (expresion[c]!='+') and (expresion[c]!='-') and (expresion[c]!='*')and not ((expresion[c]=='d') and(expresion[c:c+3]=='div')) and not((expresion[c]=='m') and (expresion[c:c+3]=='mod')):
+                expresionTupla+=expresion[c]
+                c+=1
+            variable=expresionTupla
+            cont=c-1
+        elif (expresion[cont]=='+') or (expresion[cont]=='-') or (expresion[cont]=='*') or (expresion[cont]=='/') or (expresion[cont]==')') or ((expresion[cont]=='d') and  (expresion[cont:cont+3]=='div')) or ((expresion[cont]=='m') and (expresion[cont:cont+3]=='mod')): #si la letra es un operador
             if numero.isdigit():
                 if EsNegativo:
                     EsNegativo=False
@@ -241,23 +251,24 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
                 if EsNegativo:
                     EsNegativo=False
                     variable=-1*variable
+                print variable
                 ListaE.append(variable)
                 variable=''
-            if e== 'd':
+            if expresion[cont]== 'd':
                 ListaE.append('/')
-            elif e=='m':
+            elif expresion[cont]=='m':
                 ListaE.append('%')
             else:
-                ListaE.append(e)
-        elif (e=='('):
-            ListaE.append(e)
-        elif (e!='~') and (e!=' '):   #si la letra es una variable
-            if ((e=='i' and e!='v') and (expresion[cont-1:cont+2]!='div')) or ((e=='o' and e!='d') and (expresion[cont-1:cont+2]!='mod')):
-                variable+=e
-            elif ((e =='v') and ( expresion[cont-2:cont+1]!='div')) or ((e =='d') and ( expresion[cont-2:cont+1]!='mod')):
-                variable+=e
-            elif (e!='i') and (e!='v') and (e!='o') and (e!='d'):
-                variable+=e
+                ListaE.append(expresion[cont])
+        elif (expresion[cont]=='('):
+            ListaE.append(expresion[cont])
+        elif (expresion[cont]!='~') and (expresion[cont]!=' '):   #si la letra es una variable
+            if ((expresion[cont]=='i' and expresion[cont]!='v') and (expresion[cont-1:cont+2]!='div')) or ((expresion[cont]=='o' and expresion[cont]!='d') and (expresion[cont-1:cont+2]!='mod')):
+                variable+=expresion[cont]
+            elif ((expresion[cont] =='v') and ( expresion[cont-2:cont+1]!='div')) or ((expresion[cont] =='d') and ( expresion[cont-2:cont+1]!='mod')):
+                variable+=expresion[cont]
+            elif (expresion[cont]!='i') and (expresion[cont]!='v') and (expresion[cont]!='o') and (expresion[cont]!='d'):
+                variable+=expresion[cont]
         cont+=1
     if numero.isdigit():
         if EsNegativo:
