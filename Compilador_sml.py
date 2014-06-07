@@ -16,7 +16,8 @@ def abrir_archivo(NOMBRE):
         archivo.close() #cierra el archivo
     lista=verifica(lista)
     return tipo_dato(lista) #invoca a la funcion verifica
-
+            
+        
 
 #Funcion para agregar el tipo de dato a la lista de alcance
 def tipo_dato(lista):
@@ -24,7 +25,7 @@ def tipo_dato(lista):
         if type(e[1])==int:		#Si es un int Agrega 'int'
             e+=['int']
         elif type(e[1])== bool:		#Si es un bool agregar 'bool'
-            e+= ['boolean']
+            e+= ['bool']
         elif type(e[1])== list:		#Si es de tipo lista llama a la funcion evalua tipo lista
             tipo_lista= Evalua_Tipo_Lista(e[1]) 
             e+=[tipo_lista]
@@ -83,22 +84,43 @@ def Evalua_Tipo_Lista(Lista):
         Tipo+= tipo+' list'
             
     return Tipo
-        
+def verificalet(Exp,cod):
+    Empieza=0
+    Termina=0
+    EmpLet=0
+    indice=0
+    largo=len(Exp)-1
+    for e in Exp:
+        if indice!=largo:
+            if Exp[indice:indice+2]=='in':
+                Empieza+=1
+            if Exp[indice:indice+3]=='end':
+                Termina+=1
+            if Exp[indice:indice+3]=='let':
+                EmpLet+=1
+                
+        indice+=1
+    if cod=='letin':
+        result=Empieza==EmpLet
+    else:
+        result = Empieza==Termina==EmpLet
+    return result      
 
 #separa las lineas que se encuentran divididas por un ; o por un \n y elimina los espacios entre las letras
 def separarLineas(LineaArchivo):
     Lista_Lineas=[] #almacena el archivo
     linea='' #almacena cada linea
     for elemento in LineaArchivo: #recorre el string
-        if elemento==';' or elemento=='\n': #verifica cuando existe ; o salto de linea para almacenar la linea en la lista, significa que cambia de declaracion
+        if elemento==';' or elemento=='\n'or elemento=='\t': #verifica cuando existe ; o salto de linea para almacenar la linea en la lista, significa que cambia de declaracion
             if linea!="": # Verifica que la linea no sea vacia
                 if Lista_Lineas==[]:
                     Lista_Lineas.append(linea)
                     linea=''
                 else:
-                    n=Lista_Lineas[-1].find('let')
-                    if linea[:3]!='val' or (linea[:3]=='val' and Lista_Lineas[-1][n:]=='let'):
+                    n=Lista_Lineas[-1].find('=')
+                    if linea[:3]!='val' or (Lista_Lineas[-1][n+1:n+4]=='let'and not verificalet(Lista_Lineas[-1][n+1:],'')):
                             Lista_Lineas[-1]+=linea
+                            
                     else:
                         Lista_Lineas.append(linea)
                     linea=''
@@ -119,8 +141,8 @@ def separa_variable_valor(linea,Variable,Valor,contador):
         Valor=linea[contador+1:]
         return [[Variable,Valor]]
 #Llamada por archivo_abrir, cuando termina
-'''Recorre la lista donde estan separadas las variables y los valores,
-ademas realiza los converciones de los valores'''
+"""Recorre la lista donde estan separadas las variables y los valores,
+ademas realiza los converciones de los valores"""
 def verifica(lista):
     contador=0 #Se especifica el contador para conocer el alcance de las variables
     for i in lista:
@@ -131,6 +153,8 @@ def verifica(lista):
         if evaluando[n:].find('::')!=-1: #la funcion .find sirve para conocer si una expresion se encuentra en el string
             # En caso de encontrar la expresion :: concatena las listas
             i[1]=Concatenaaux(evaluando[n:],lista[:contador])
+        elif evaluando[n:n+3]=='let':
+            i[1]=leerLet(evaluando[n:],lista[:contador])
         elif evaluando[n:n+2]=='if':
             # En caso de encontrar la expresion if convierte las expresiones condicionales
             i[1]=Exp_If(evaluando[n:],lista[:contador])
@@ -188,30 +212,35 @@ def verifica_listas_tuplas(valor,signo,signo2):
 def convertir_elemento(ListaSeparada,Scope):
     lista=[]
     for elemento in ListaSeparada:
-        if elemento.isdigit():
-            lista.append(int(elemento))
-        elif elemento[0]=='~' and  elemento[1:].isdigit():
-            lista.append(-1*int(elemento[1:]))
-        elif elemento[:2]=='if':
-            lista.append(Exp_If(elemento,Scope))
-        elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or elemento.find('=')!=-1 or elemento.find('<>')!=-1:
-            lista.append(ExpBooleans(elemento,Scope))
-        elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
-            lista.append(evaluarExpresionesN(elemento, Scope)[0])
-        elif elemento.find('hd')!=-1 or elemento.find('tl')!=-1 or elemento.find('::')!=-1:
-            lista.append(Concatenaaux(elemento,Scope))
-        elif elemento[0]=='[':
-            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
-            lista.append(x) 
-        elif elemento[0]=='(':
-            x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
-            lista.append(tuple(x))
-        elif elemento.lower()=='true' or elemento.lower()== ' true':
-            lista.append(True)
-        elif elemento.lower()=='false' or elemento.lower()==' false':
-            lista.append(False)
-        else:
-            lista.append(Cambia_Variables(elemento,Scope))
+        try:
+            if elemento.isdigit():
+                lista.append(int(elemento))
+            elif elemento[0]=='~' and  elemento[1:].isdigit():
+                lista.append(-1*int(elemento[1:]))
+            elif elemento[:2]=='if':
+                lista.append(Exp_If(elemento,Scope))
+            elif elemento[:3]=="let":
+                lista.append(leerLet(elemento,Scope))
+            elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or (elemento.find('=')!=-1 and elemento[elemento.find('=')-4:elemento.find('=')-1]!='val') or elemento.find('<>')!=-1:
+                lista.append(ExpBooleans(elemento,Scope))
+            elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
+                lista.append(evaluarExpresionesN(elemento, Scope)[0])
+            elif elemento.find('hd')!=-1 or elemento.find('tl')!=-1 or elemento.find('::')!=-1:
+                lista.append(Concatenaaux(elemento,Scope))
+            elif elemento[0]=='[':
+                x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
+                lista.append(x) 
+            elif elemento[0]=='(':
+                x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
+                lista.append(tuple(x))
+            elif elemento.lower()=='true' or elemento.lower()== ' true':
+                lista.append(True)
+            elif elemento.lower()=='false' or elemento.lower()==' false':
+                lista.append(False)
+            else:
+                lista.append(Cambia_Variables(elemento,Scope))
+        except:
+            lista.append('No se logro resolver')
     return lista
 
 #***************************************************************************
@@ -225,11 +254,22 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
     c=0
     EsNegativo=False
     largo=len(expresion)
+    if expresion[0]=='(' and expresion[-1]==')':
+        if verifica_listas_tuplas(expresion[1:-1],'(',')'):
+            expresion=expresion[1:-1]
     while cont!=largo:
         if expresion[cont]=='~':
             EsNegativo=True
         if expresion[cont].isdigit(): #si la letra es un numero o es negativo el numero
             numero+=expresion[cont]
+            
+        elif expresion[cont:cont+3]=='let':
+            print 'entre'
+            print expresion[cont:]
+            variable=completalet(expresion[cont:])
+            print 'variable'
+            print variable
+            cont+=len(variable)
         elif expresion[cont]=='#':  #cambieeeee
             c=cont
             expresionTupla=''
@@ -282,7 +322,6 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
         variable=''
     valorExpresion=  OperacionE(ListaE)
     return valorExpresion
-
 #Le ingresa una lista con la expresion y va desarrollando cada operacion, es recursiva
 def OperacionE(ListaE):
     if len(ListaE)==1:
@@ -531,9 +570,10 @@ def ExpBooleans(Exp,lista):
         nueva=Booleans(Primer,Segund,Div[1],lista)
     else:
         if Exp[0]=='(' and Exp[-1]==')':
-            Exp=Exp[1:-1]
-        if Exp.find(' <= ')!=-1:
-            n=Exp.find(' <= ')
+            if verifica_listas_tuplas(Exp[1:-1],'(',')'):
+                Exp=Exp[1:-1]
+        if Exp.find('<=')!=-1:
+            n=Exp.find('<=' )
             m=n+2
             signo='<='
             Primer=convertir_elemento([Exp[:n]],lista)        
@@ -696,25 +736,86 @@ def completa_exp_Listas2(Exp):
     return Elementos
 """*************************************************************************"""
 ###############################################################################
+#########################Expresiones Let#######################################
+def completalet(Exp):
+    cont=0
+    pal=''
+    resultado=''
+    
+    for e in Exp:
+        if pal[-3:]!='end':
+            pal+=e
+        else:
+            if verificalet(pal,''):
+                resultado= pal
+            else:
+                pal+=e
+                
+        cont+=1
+    if resultado=="":
+        resultado=pal
+    return resultado
+
+def buscalet(Exp):
+    cont=0
+    pal=''
+    resultado=''
+    for e in Exp:
+        if pal[-2:]!='in':
+            pal+=e
+        else:
+            if verificalet(pal,'letin'):
+                resultado= pal
+            else:
+                pal+=e
+                
+        cont+=1
+    return resultado
+            
+            
+def leerLet(expresionLet, ListaEvaluada):
+    cont=0
+    Declaraciones=buscalet(expresionLet)[3:-2]
+    Variables=separavariableslet(Declaraciones[3:])
+    ListaVariables=[]
+    for elemento in Variables:
+        ListaVariables+=separa_variable_valor(elemento,"","",0)
+    ListaVariables=verifica(ListaVariables)
+    contador=0
+    while contador!=len(ListaVariables):
+        if isinstance (ListaVariables[contador][1], str):
+            ListaVariables[contador][1]=Cambia_Variables(ListaVariables[contador][1],ListaEvaluada)
+        contador+=1
+    expresionLet= expresionLet.partition(buscalet(expresionLet))[2][:-3]
+    resultado=convertir_elemento([expresionLet],ListaEvaluada+ListaVariables)[0]
+    return resultado
 
 
-
-
-                 
-
-
-
-
+        
+def separavariableslet(variables):
+    lista=[]
+    Variables=''
+    contador=0
+    for e in variables:
+        if variables[contador:contador+3]!='val':
+            
+            Variables+=e
+        else:
+            if not verificalet(Variables,''):
+                Variables+=e
+            else:
+                lista+=[Variables]
+                Variables=''
+                Variables+=e
+                
+        contador+=1
+    lista+=[Variables]
+    cont2=0
+    for e in lista:
+        if e[:3]=='val':
+            lista[cont2]=e[3:]
+        cont2+=1
+            
+    return lista
                 
             
-   
-        
-
-
-
-
-        
-
-
-
-
