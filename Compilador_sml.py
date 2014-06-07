@@ -84,6 +84,7 @@ def Evalua_Tipo_Lista(Lista):
         Tipo+= tipo+' list'
             
     return Tipo
+
 def verificalet(Exp,cod):
     Empieza=0
     Termina=0
@@ -158,13 +159,15 @@ def verifica(lista):
         elif evaluando[n:n+2]=='if':
             # En caso de encontrar la expresion if convierte las expresiones condicionales
             i[1]=Exp_If(evaluando[n:],lista[:contador])
-        elif evaluando[n:].find('<=')!=-1 or evaluando[n:].find('orelse')!=-1 or evaluando[n:].find('andalso')!=-1 or evaluando[n:].find('<=')!=-1 or evaluando[n:].find('<')!=-1 or evaluando[n:].find('>')!=-1 or evaluando[n:].find('=')!=-1 or evaluando[n:].find('<>')!=-1:
+        elif evaluando[n:].find('<=')!=-1 or evaluando[n:].find('null')!=-1 or evaluando[n:].find('orelse')!=-1 or evaluando[n:].find('andalso')!=-1 or evaluando[n:].find('<=')!=-1 or evaluando[n:].find('<')!=-1 or evaluando[n:].find('>')!=-1 or evaluando[n:].find('=')!=-1 or evaluando[n:].find('<>')!=-1:
             # convierte las expresiones booleans
             i[1]=ExpBooleans(evaluando[n:],lista[:contador])
         elif evaluando[n]=="[" :
             #Convierte el contenido de la lista
             contenido=separa_contenido_estructuras(evaluando[n+1:-1])
             contenido=convertir_elemento(contenido,lista[:contador])
+            if evaluando[n:]=='[]':
+                contenido=[]
             i[1]=contenido
         elif evaluando[n]=="(":
             #Convierte el contenido de las tuplas
@@ -221,7 +224,7 @@ def convertir_elemento(ListaSeparada,Scope):
                 lista.append(Exp_If(elemento,Scope))
             elif elemento[:3]=="let":
                 lista.append(leerLet(elemento,Scope))
-            elif elemento.find('<=')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or (elemento.find('=')!=-1 and elemento[elemento.find('=')-4:elemento.find('=')-1]!='val') or elemento.find('<>')!=-1:
+            elif elemento.find('<=')!=-1 or elemento.find('null')!=-1 or elemento.find('orelse')!=-1 or elemento.find('andalso')!=-1 or elemento.find('<=')!=-1 or elemento.find('<')!=-1 or elemento.find('>')!=-1 or (elemento.find('=')!=-1 and elemento[elemento.find('=')-4:elemento.find('=')-1]!='val') or elemento.find('<>')!=-1:
                 lista.append(ExpBooleans(elemento,Scope))
             elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
                 lista.append(evaluarExpresionesN(elemento, Scope)[0])
@@ -229,6 +232,8 @@ def convertir_elemento(ListaSeparada,Scope):
                 lista.append(Concatenaaux(elemento,Scope))
             elif elemento[0]=='[':
                 x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
+                if elemento=='[]':
+                    x=[]
                 lista.append(x) 
             elif elemento[0]=='(':
                 x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
@@ -264,11 +269,7 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
             numero+=expresion[cont]
             
         elif expresion[cont:cont+3]=='let':
-            print 'entre'
-            print expresion[cont:]
             variable=completalet(expresion[cont:])
-            print 'variable'
-            print variable
             cont+=len(variable)
         elif expresion[cont]=='#':  #cambieeeee
             c=cont
@@ -291,7 +292,6 @@ def evaluarExpresionesN(expresion, ListaEvaluada):
                 if EsNegativo:
                     EsNegativo=False
                     variable=-1*variable
-                print variable
                 ListaE.append(variable)
                 variable=''
             if expresion[cont]== 'd':
@@ -452,7 +452,6 @@ realiza las operaciones equivalentes en python''''
 '''************************************************************************'''"""
 def Exp_Listas(expresion,Lista):
     lista=[]
-
     if expresion.find("::")!=-1:
         if expresion[0]=='(':
             Div=completa_exp_Listas(expresion)
@@ -460,7 +459,10 @@ def Exp_Listas(expresion,Lista):
             Div=expresion.partition('::')
         Cabeza=convertir_elemento([Div[0]],Lista)
         Cuerpo=convertir_elemento([Div[2]],Lista)
-        lista+=Cabeza+Cuerpo
+        resultado=Cabeza+Cuerpo
+        if Cuerpo==[[]]:
+            resultado=[Cabeza]
+        lista+=resultado
     elif expresion.find('hd')!=-1:
         Div=expresion.partition('hd')
         Div=Div[1:]
@@ -614,6 +616,10 @@ def ExpBooleans(Exp,lista):
             Primer=convertir_elemento([Exp[:n]],lista)        
             Segund=convertir_elemento([Exp[m:]],lista)
             nueva=Booleans(Primer[0],Segund[0],signo,lista)
+        elif Exp.find('null')!=-1:
+            n=Exp.find('null')
+            Primer=convertir_elemento([Exp[n+4:]],lista)
+            nueva=Primer[0]==[]
 
     return nueva  
 """************************************************************************"""
@@ -650,8 +656,8 @@ def Booleans(Primer,Segund,Signo,lista):
 ###############Expresiones Condicionales######################################
 """************************************************************************"""
 '''Evalua Expresiones Condicionales, busca en las expresiones operadores como
-if,then,elseif,else si lo encuentra resuelve la operacion en forma de descarte, la lista de entrada
-sirve para el cambio y el alcance de las variables.'''
+if,then,elseif,else si lo encuentra resuelve la operacion en forma de descarte,
+la lista de entrada sirve para el cambio y el alcance de las variables.'''
 """************************************************************************"""
 def Exp_If(Exp,Lista):
     if Exp[:2]=='if':
@@ -737,6 +743,7 @@ def completa_exp_Listas2(Exp):
 """*************************************************************************"""
 ###############################################################################
 #########################Expresiones Let#######################################
+
 def completalet(Exp):
     cont=0
     pal=''
