@@ -229,7 +229,7 @@ def convertir_elemento(ListaSeparada,Scope):
             elif elemento.find('+')!=-1 or elemento.find('-')!=-1 or elemento.find('*')!=-1 or elemento.find('/')!=-1 or elemento.find('div')!=-1 or elemento.find('mod')!=-1:
                 lista.append(evaluarExpresionesN(elemento, Scope)[0])
             elif elemento.find('hd')!=-1 or elemento.find('tl')!=-1 or elemento.find('::')!=-1:
-                lista.append(Concatenaaux(elemento,Scope))
+                lista.append(Exp_Listas(elemento,Scope))
             elif elemento[0]=='[':
                 x=convertir_elemento(separa_contenido_estructuras(elemento[1:-1]),Scope)
                 if elemento=='[]':
@@ -243,6 +243,7 @@ def convertir_elemento(ListaSeparada,Scope):
             elif elemento.lower()=='false' or elemento.lower()==' false':
                 lista.append(False)
             else:
+                print 'llegue'
                 lista.append(Cambia_Variables(elemento,Scope))
         except:
             lista.append('No se logro resolver')
@@ -452,6 +453,9 @@ realiza las operaciones equivalentes en python''''
 '''************************************************************************'''"""
 def Exp_Listas(expresion,Lista):
     lista=[]
+    if expresion[0]=='(' and expresion[-1]==')':
+        if verifica_listas_tuplas(expresion[1:-1],'(',')'):
+            expresion=expresion[1:-1]
     if expresion.find("::")!=-1:
         if expresion[0]=='(':
             Div=completa_exp_Listas(expresion)
@@ -459,49 +463,41 @@ def Exp_Listas(expresion,Lista):
             Div=expresion.partition('::')
         Cabeza=convertir_elemento([Div[0]],Lista)
         Cuerpo=convertir_elemento([Div[2]],Lista)
-        resultado=Cabeza+Cuerpo
-        if Cuerpo==[[]]:
-            resultado=[Cabeza]
-        lista+=resultado
+        print Div
+        lista+=Cabeza+Cuerpo
+        print lista
     elif expresion.find('hd')!=-1:
         Div=expresion.partition('hd')
         Div=Div[1:]
         Cabeza=convertir_elemento([Div[1]],Lista)[0][0]
         lista=[Cabeza]
     elif expresion.find('tl')!=-1:
+        print expresion
         Div=expresion.partition('tl')
         Div=Div[1:]
+        print Div[1]
         Cuerpo=convertir_elemento([Div[1]],Lista)[0]
+        print Cuerpo
         lista+=[Cuerpo[1:]]
-    if len(lista)==2 and isinstance(lista[1],list):
-        lis=lista
-        lista=[]
-        lista=[lis[0]]+lis[1]
-    if len(lista)==1 and isinstance(lista[0],list):
-        lista=lista[0]
-    return lista
-"""*************************************************************************"""
-""" su objetivo es cambiar variables en caso de que sea necesario"""
-"""*************************************************************************"""
-
-def Concatenaaux(expresion,lista2):
-    lista=Exp_Listas(expresion,lista2)
-    resultado=[]
-    if isinstance(lista,int):
-        lista=[lista]
-    for e in lista:
-        if isinstance(e,int):
-            resultado+=[e]
+    if len(lista)==2:
+        if lista[1]==[] and isinstance(lista[0],int):
+            print 'entre'
+            elemento=[lista[0]]
+            lista=[]
+            lista+=[elemento]
+            print elemento
+            print lista
         else:
-            variable=[Cambia_Variables(e,lista2)]
-            resultado+=variable
-    if len(resultado)==1:
-        resultado=resultado[0]
-    elif len(resultado)==2 and isinstance(resultado[1],list):
-        resul=resultado
-        resultado=[]
-        resultado=[resul[0]]+resul[1]
-    return resultado
+            if isinstance(lista[1],list):
+                lis=lista
+                lista=[]
+                lista=[lis[0]]+lis[1]
+    if len(lista)==1 and (isinstance(lista[0],list) or isinstance(lista[0],int)):
+            lista=lista[0]
+
+    print lista
+    return lista
+
 ##############################################################################
 ##################Evaluar Expresiones Booleanas###############################
 '''***********************************************************************'''
