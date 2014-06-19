@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="jumbo">
+    <h2>Tabla <h2>
+    <h3><h3>
+			
+		  <ul>
+				 <table>
+				<tr> <td BGCOLOR="black"><strong><font color="Blue">Variable</font></strong></td> 
+				<td  BGCOLOR="black"><strong><font color="Blue">Ambiente Dinamico</font></strong></td>
+				<td  BGCOLOR="black"><strong><font color="Blue">Ambiente Estatico</font></strong></td>				
+				</tr>
+		 		
+			    {% for n in lista %}
+			 	 
+				 <tr>
+					<td  BGCOLOR="black"><strong>{{n[0]}}</strong></td>
+					<td  BGCOLOR="black"><strong>{{n[1]}}</strong></td>
+					<td  BGCOLOR="black"><strong>{{n[2]}}</strong></td>
+				 </tr>
+				
+			    {% endfor %}
+				
+				 </table>
+		  </ul>
+			
+		
+  </div>
+{% endblock %}

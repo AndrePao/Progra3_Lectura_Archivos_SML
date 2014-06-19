@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="jumbo">
+     <title>Subir Archivo</title>
+        <style type="text/css">
+	body {background-color:#003333;}
+	{% include "skel-noscript.css" %}
+	{% include "style.css" %}
+	{% include "style-desktop.css" %}
+	</style>
+		
+		</head>	
+        <body>
+		<!-- Header Wrapper -->
+				
+		<!-- Header -->
+		<div id="header"><!-- Logo -->
+		<div id="logo">
+		<h1><a href="#"><!-- Subir -->
+		<h3> <center>Subir nuevo archivo </center><h3>  
+		<h2><h2>
+		<h2><h2>
+   		<center> <form action="{{url_for('upload_file')}}" method= "post" enctype= "multipart/form-data"> 
+      		<input type=file value=Cargar name=file> 
+		<input type="submit" value="Aceptar">
+    		</ form> </center>
+		
+		<!-- /Subir -->	</a></h1>
+		<span class="byline"> </span>
+		</div>
+		<!-- /Logo -->						
+		<!-- Nav -->
+		
+		<!-- /Nav -->
+		
+		<!-- /Header -->
+		
+		<!-- /Header Wrapper -->
+			
+		<!--<div id="intro-wrapper" class="wrapper wrapper-style1">-->
+  </div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="jumbo">
+   <center><h2><font color="Black">Bienvenido al Lector de archivos SML </font><h2></center>
+   <center><h2><font color="Black">  </font><h2></center>
+   <center><h2><font color="Black">Si desea cargar su archivo presione subir archivo en el menu </font><h2></center>
+  </div>
+{% endblock %}

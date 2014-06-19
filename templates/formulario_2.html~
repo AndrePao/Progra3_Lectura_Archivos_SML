@@ -1,0 +1,17 @@
+<!-- cuando le doy enviar me llama al método POST -->
+<form name="main" method="post">
+<p>Intenta de Nuevo</p>
+<table>
+<tr><th><label for="nombre">nombre</label></th><td><input type="text" id="nombre" value="" name="nombre"/></td></tr>
+<tr><th><label for="id">id</label></th><td><input type="text" id="id" value="" name="id"/><strong>Required</strong></td></tr>
+<tr><th><label for="observacion">observacion</label></th><td><textarea id="observacion" name="observacion"></textarea></td></tr>
+<tr><th><label for="reenviar_">reenviar</label></th><td><input type="checkbox" id="reenviar_" value="" name="reenviar"/></td></tr>
+<tr><th><label for="prioridad">prioridad</label></th><td><select id="prioridad" name="prioridad">
+<option selected="selected" value="baja">baja</option>
+<option value="media">media</option>
+<option value="alta">alta</option>
+</select>
+</td></tr>
+</table>
+<input type="submit" />
+</form>
