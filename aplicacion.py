@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, abort, session
-import compilador_sml
+import Compilador_sml
 
 app = Flask(__name__)
 #Pagina principal
